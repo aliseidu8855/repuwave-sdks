@@ -7,11 +7,11 @@
 
 ## Overview
 
-`repuwave-sdks` contains official client libraries that enable AI agents to **automatically sign outbound requests** with their ECDSA private keys. SDKs handle the cryptographic complexity so agent developers can focus on business logic.
+`repuwave-sdks` contains official client libraries that enable AI agents to **automatically sign outbound requests** with their Ed25519 private keys. SDKs handle the cryptographic complexity so agent developers can focus on business logic.
 
 ### What the SDKs Do
 
-1. **Generate ECDSA keypairs** (secp256k1 curve) for agent identity
+1. **Generate Ed25519 keypairs** (32-byte seed) for agent identity
 2. **Automatically sign** every outbound HTTP request with the agent's private key
 3. **Attach Repuwave headers** (`X-Repuwave-UAID`, `X-Repuwave-Signature`, `X-Repuwave-Timestamp`)
 4. **Handle key rotation** seamlessly when rotating to a new keypair
@@ -24,7 +24,7 @@ Every request signed by an SDK includes:
 | Header | Value | Purpose |
 |--------|-------|---------|
 | `X-Repuwave-UAID` | `agent-uaid` | Identifies the agent |
-| `X-Repuwave-Signature` | `hex(ECDSA_Sign(privkey, SHA256(payload)))` | Proves identity |
+| `X-Repuwave-Signature` | `hex(Ed25519_Sign(privkey, SHA256(payload)))` | Proves identity |
 | `X-Repuwave-Timestamp` | `1715040000.123456` | Prevents replay attacks (±15s window) |
 
 ### Signing Protocol
@@ -36,7 +36,7 @@ canonical_payload = JSON({
     "body_hash": SHA256(request_body)  // empty string if no body
 })
 
-signature = ECDSA_Sign(private_key, SHA256(canonical_payload))
+signature = Ed25519_Sign(private_key, SHA256(canonical_payload))
 ```
 
 ---
@@ -56,7 +56,7 @@ python/
 └── README.md            # Python-specific usage guide
 ```
 
-**Dependencies:** `httpx` (async HTTP), `ecdsa` (secp256k1 signing)
+**Dependencies:** `httpx` (async HTTP), `PyNaCl` (Ed25519 signing)
 
 **Usage (Section C implementation):**
 
@@ -85,7 +85,7 @@ async with RepuwaveAsyncClient(private_key="...", uaid="...") as client:
 |-------|---------|
 | `RepuwaveClient` | Synchronous HTTP client wrapping `httpx.Client` |
 | `RepuwaveAsyncClient` | Async HTTP client wrapping `httpx.AsyncClient` |
-| `ECDSASigner` | Handles keypair generation, payload signing, signature encoding |
+| `Ed25519Signer` | Handles keypair generation, payload signing, signature encoding |
 | `RepuwaveError` | Base exception for SDK errors |
 
 ---
@@ -129,8 +129,8 @@ const result = await client.post("https://vendor-api.com/action", {
 | Export | Purpose |
 |--------|---------|
 | `RepuwaveClient` | HTTP client with auto-signing |
-| `ECDSASigner` | Keypair generation + signing utilities |
-| `generateKeypair()` | Helper to create new secp256k1 keypair |
+| `Ed25519Signer` | Keypair generation + signing utilities |
+| `generateKeypair()` | Helper to create new Ed25519 keypair |
 | `RepuwaveError` | Base error class |
 
 ---
