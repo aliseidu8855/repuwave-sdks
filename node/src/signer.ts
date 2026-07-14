@@ -1,4 +1,5 @@
-import { createHash, generateKeyPairSync, sign, verify } from "crypto";
+import { createHash, generateKeyPairSync, sign } from "crypto";
+import { SigningError } from "./errors";
 
 export class Ed25519Signer {
   /**
@@ -22,8 +23,25 @@ export class Ed25519Signer {
   }
 
   /**
+   * Format a Unix timestamp to match Python's float repr.
+   *
+   * The server serializes the timestamp with Python's json.dumps, which
+   * always renders a float with a decimal point (e.g. 1700000000.0).
+   * JavaScript's Number#toString drops the trailing ".0" for whole numbers,
+   * so a whole-second timestamp would produce a different canonical string
+   * and the signature would fail to verify. Appending ".0" when no decimal
+   * (or exponent) is present makes the two representations identical.
+   */
+  static formatTimestamp(timestamp: number): string {
+    const s = timestamp.toString();
+    return /[.eE]/.test(s) ? s : `${s}.0`;
+  }
+
+  /**
    * Build the canonical payload string for signing.
-   * Must produce byte-identical output to the server's Ed25519Service.
+   * Must produce byte-identical output to the server's Ed25519Service:
+   * a compact, sorted-key JSON object {body_hash, timestamp, uaid} with the
+   * timestamp rendered exactly as Python would.
    */
   static buildCanonicalPayload(
     uaid: string,
@@ -36,20 +54,14 @@ export class Ed25519Signer {
       bodyHash = createHash("sha256").update(bodyString).digest("hex");
     }
 
-    const payload = {
-      body_hash: bodyHash,
-      timestamp: timestamp,
-      uaid: uaid,
-    };
-
-    // Ensure sorted keys for deterministic payload
-    const sortedKeys = Object.keys(payload).sort() as (keyof typeof payload)[];
-    const orderedPayload: Record<string, any> = {};
-    for (const key of sortedKeys) {
-      orderedPayload[key] = payload[key];
-    }
-
-    return JSON.stringify(orderedPayload);
+    // Built manually (not via JSON.stringify) so the timestamp keeps its
+    // Python-compatible ".0". Keys are in sorted order; JSON.stringify is
+    // used only to escape the string values.
+    return (
+      `{"body_hash":${JSON.stringify(bodyHash)},` +
+      `"timestamp":${Ed25519Signer.formatTimestamp(timestamp)},` +
+      `"uaid":${JSON.stringify(uaid)}}`
+    );
   }
 
   /**
@@ -57,26 +69,33 @@ export class Ed25519Signer {
    * Returns hex-encoded 64-byte signature (128 hex chars).
    */
   static sign(privateKeyHex: string, canonicalPayload: string): string {
-    // Reconstruct the PKCS8 DER wrapper for the Ed25519 seed
-    const seedBytes = Buffer.from(privateKeyHex, "hex");
-    const pkcs8Prefix = Buffer.from(
-      "302e020100300506032b657004220420",
-      "hex"
-    );
-    const pkcs8Der = Buffer.concat([pkcs8Prefix, seedBytes]);
+    try {
+      // Reconstruct the PKCS8 DER wrapper for the Ed25519 seed
+      const seedBytes = Buffer.from(privateKeyHex, "hex");
+      if (seedBytes.length !== 32) {
+        throw new SigningError(
+          `Ed25519 private key must be 32 bytes (64 hex chars), got ${seedBytes.length}.`,
+        );
+      }
+      const pkcs8Prefix = Buffer.from("302e020100300506032b657004220420", "hex");
+      const pkcs8Der = Buffer.concat([pkcs8Prefix, seedBytes]);
 
-    const privateKey = {
-      key: pkcs8Der,
-      format: "der" as const,
-      type: "pkcs8" as const,
-    };
+      const privateKey = {
+        key: pkcs8Der,
+        format: "der" as const,
+        type: "pkcs8" as const,
+      };
 
-    // Hash the canonical payload (SHA-256 digest, matching server protocol)
-    const payloadHash = createHash("sha256").update(canonicalPayload).digest();
+      // Hash the canonical payload (SHA-256 digest, matching server protocol)
+      const payloadHash = createHash("sha256").update(canonicalPayload).digest();
 
-    // Ed25519 sign the hash (deterministic — no random nonce)
-    const signature = sign(null, payloadHash, privateKey);
+      // Ed25519 sign the hash (deterministic — no random nonce)
+      const signature = sign(null, payloadHash, privateKey);
 
-    return signature.toString("hex");
+      return signature.toString("hex");
+    } catch (err) {
+      if (err instanceof SigningError) throw err;
+      throw new SigningError(`Failed to sign payload: ${(err as Error).message}`);
+    }
   }
 }

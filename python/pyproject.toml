@@ -1,11 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "repuwave-sdk"
 version = "0.1.0"
 description = "Official Python SDK for the Repuwave Trust & Reputation API"
+readme = "README.md"
+license = { text = "Proprietary" }
 requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.27,<1.0",
-    "ecdsa>=0.19,<1.0",
+    "pynacl>=1.5,<2.0",
 ]
 
 [project.optional-dependencies]
@@ -14,3 +20,6 @@ dev = [
     "pytest-asyncio>=0.23",
     "respx>=0.21",
 ]
+
+[tool.setuptools.packages.find]
+include = ["repuwave_sdk*"]
