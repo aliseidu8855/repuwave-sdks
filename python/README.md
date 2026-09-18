@@ -1,27 +1,27 @@
 # Repuwave Python SDK
 
 > **Official Python client for AI agents on the Repuwave trust network.**  
-> Python 3.10+ · httpx · ECDSA secp256k1
+> Python 3.10+ · httpx · Ed25519
 
 ---
 
 ## Overview
 
-The Repuwave Python SDK wraps `httpx` to provide an HTTP client that **automatically signs every outbound request** with the agent's ECDSA private key. Vendors receiving these requests can verify the agent's identity and reputation score through the Repuwave API.
+The Repuwave Python SDK wraps `httpx` to provide an HTTP client that **automatically signs every outbound request** with the agent's Ed25519 private key. Vendors receiving these requests can verify the agent's identity and reputation score through the Repuwave API.
 
 ### How It Works
 
 1. Agent initializes `RepuwaveClient` with their private key and UAID
 2. Every HTTP request (GET, POST, PATCH, DELETE) is intercepted before sending
 3. The SDK constructs a canonical payload: `{uaid, timestamp, body_hash}`
-4. Signs the payload with ECDSA (secp256k1) and attaches headers
+4. Signs the payload with Ed25519 and attaches headers
 5. Vendor receives the request with `X-Repuwave-UAID`, `X-Repuwave-Signature`, `X-Repuwave-Timestamp`
 
 ### Security Guarantees
 
 | Property | Mechanism |
 |----------|-----------|
-| **Identity** | ECDSA signature proves possession of the registered private key |
+| **Identity** | Ed25519 signature proves possession of the registered private key |
 | **Integrity** | `body_hash` in signed payload ensures body hasn't been tampered |
 | **Freshness** | High-resolution timestamp prevents replay attacks (±15s window) |
 | **Non-repudiation** | Signature is verifiable by any party with the agent's public key |
@@ -81,7 +81,7 @@ async with RepuwaveAsyncClient(private_key="...", uaid="...") as client:
 from repuwave_sdk import generate_keypair
 
 private_key, public_key = generate_keypair()
-# private_key: hex-encoded secp256k1 private key (keep secret!)
+# private_key: hex-encoded Ed25519 private key (keep secret!)
 # public_key:  hex-encoded public key (register with Repuwave)
 ```
 
@@ -95,7 +95,7 @@ private_key, public_key = generate_keypair()
 |-------|-------------|
 | `RepuwaveClient` | Synchronous HTTP client. Wraps `httpx.Client`. All methods (`get`, `post`, `patch`, `delete`) auto-sign requests. |
 | `RepuwaveAsyncClient` | Async HTTP client. Wraps `httpx.AsyncClient`. Context manager support. |
-| `ECDSASigner` | Low-level signing utility. Handles canonical payload construction, SHA-256 hashing, ECDSA signing/verification. |
+| `Ed25519Signer` | Low-level signing utility. Handles canonical payload construction, SHA-256 hashing, Ed25519 signing. |
 
 ### Functions
 
@@ -110,7 +110,7 @@ private_key, public_key = generate_keypair()
 |-----------|------|
 | `RepuwaveError` | Base exception for all SDK errors |
 | `SigningError` | Private key is invalid or signing fails |
-| `InvalidKeyError` | Provided key is not a valid secp256k1 key |
+| `InvalidKeyError` | Provided key is not a valid Ed25519 key |
 
 ---
 
@@ -119,7 +119,7 @@ private_key, public_key = generate_keypair()
 | Package | Version | Purpose |
 |---------|---------|---------|
 | `httpx` | `>=0.27,<1.0` | Modern async-capable HTTP client |
-| `ecdsa` | `>=0.19,<1.0` | ECDSA signing with secp256k1 curve |
+| `pynacl` | `>=1.5,<2.0` | Ed25519 signing (libsodium bindings) |
 
 ### Dev Dependencies
 
