@@ -62,7 +62,15 @@ import { RepuwaveService } from "@repuwave/node-sdk";
 const svc = new RepuwaveService({ apiKey: process.env.REPUWAVE_SERVICE_KEY! });
 
 // Verify an incoming agent's trust score.
-const verdict = await svc.verify({ uaid: incomingUaid });
+const verdict = await svc.verify({
+  uaid: incomingUaid,
+  // Required: the server verifies this against the agent's public key. A UAID
+  // alone proves nothing — UAIDs are public, listed in the key directory.
+  signature: req.headers["x-repuwave-signature"] as string,
+  timestamp: req.headers["x-repuwave-timestamp"] as string,
+  // If the agent's request had a body, pass its sha256 too.
+  // bodyHash: createHash("sha256").update(rawBody).digest("hex"),
+});
 if ((verdict.score as number) < 50) {
   // reject the request
 }

@@ -18,9 +18,23 @@ export interface RepuwaveServiceOptions {
 
 export interface VerifyParams {
   uaid: string;
-  /** The agent's signature from the incoming request (optional context). */
-  signature?: string;
-  timestamp?: string | number;
+  /**
+   * The agent's signature from the incoming request.
+   *
+   * Required. The server checks it against the agent's registered public key
+   * and refuses without it -- a UAID alone proves nothing, because UAIDs are
+   * public, listed in the key directory. This was typed optional and described
+   * as "optional context" while the endpoint ignored it entirely.
+   */
+  signature: string;
+  /** The timestamp the agent signed. Valid 15s either side of server time. */
+  timestamp: string | number;
+  /**
+   * sha256 of the body the agent sent you, if its request had one. The agent
+   * signed that hash and only you saw the body, so without it the signature
+   * cannot be reconstructed.
+   */
+  bodyHash?: string;
 }
 
 export type EventType =
@@ -85,6 +99,7 @@ export class RepuwaveService {
     if (params.timestamp !== undefined) {
       headers["X-Repuwave-Timestamp"] = params.timestamp.toString();
     }
+    if (params.bodyHash) headers["X-Repuwave-Body-Hash"] = params.bodyHash;
 
     const response = await fetch(`${this.baseUrl}/verify/${params.uaid}/`, {
       method: "GET",
