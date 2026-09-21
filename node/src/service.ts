@@ -51,7 +51,7 @@ export class RepuwaveService {
 
   constructor(options: RepuwaveServiceOptions) {
     this.apiKey = options.apiKey;
-    this.baseUrl = (options.baseUrl || "https://api.repuwave.io/v1").replace(/\/$/, "");
+    this.baseUrl = (options.baseUrl || "https://repuwave.fasolink.app/v1").replace(/\/$/, "");
   }
 
   private headers(extra: Record<string, string> = {}): Record<string, string> {

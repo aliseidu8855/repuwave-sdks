@@ -10,7 +10,7 @@ Usage:
     client = RepuwaveClient(
         private_key="your_hex_private_key",
         uaid="your-agent-uuid",
-        base_url="https://api.repuwave.io/v1",
+        base_url="https://repuwave.fasolink.app/v1",
     )
 
     # All requests are automatically signed
@@ -39,7 +39,7 @@ class RepuwaveClient:
         self,
         private_key: str,
         uaid: str,
-        base_url: str = "https://api.repuwave.io/v1",
+        base_url: str = "https://repuwave.fasolink.app/v1",
         **httpx_kwargs,
     ) -> None:
         self._signer = Ed25519Signer(private_key)
@@ -101,7 +101,7 @@ class RepuwaveAsyncClient:
         self,
         private_key: str,
         uaid: str,
-        base_url: str = "https://api.repuwave.io/v1",
+        base_url: str = "https://repuwave.fasolink.app/v1",
         **httpx_kwargs,
     ) -> None:
         self._signer = Ed25519Signer(private_key)

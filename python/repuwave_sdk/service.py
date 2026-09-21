@@ -20,7 +20,7 @@ class RepuwaveService:
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://api.repuwave.io/v1",
+        base_url: str = "https://repuwave.fasolink.app/v1",
         **httpx_kwargs,
     ) -> None:
         self._api_key = api_key
