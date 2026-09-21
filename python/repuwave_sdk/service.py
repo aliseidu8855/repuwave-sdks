@@ -35,17 +35,32 @@ class RepuwaveService:
         uaid: str,
         signature: str,
         timestamp: str | float,
+        body: bytes | None = None,
+        body_hash: str = "",
     ) -> dict:
         """
         Verify an agent's signature and retrieve their current trust score.
+
+        The signature is checked server-side against the agent's registered
+        public key, so a UAID alone buys nothing -- which matters because UAIDs
+        are public, published in the key directory.
+
+        If the agent's request carried a body, pass it as `body` (or its sha256
+        hex as `body_hash`). The agent signed that hash and only you saw the
+        body, so without it the signature cannot be reconstructed and the call
+        is refused.
         """
-        response = self._client.get(
-            f"/verify/{uaid}/",
-            headers={
-                "X-Repuwave-Signature": signature,
-                "X-Repuwave-Timestamp": str(timestamp),
-            },
-        )
+        if body is not None and not body_hash:
+            body_hash = hashlib.sha256(body).hexdigest()
+
+        headers = {
+            "X-Repuwave-Signature": signature,
+            "X-Repuwave-Timestamp": str(timestamp),
+        }
+        if body_hash:
+            headers["X-Repuwave-Body-Hash"] = body_hash
+
+        response = self._client.get(f"/verify/{uaid}/", headers=headers)
         if response.status_code == 404:
             return {"verified": False, "score": 0, "trust_level": "UNKNOWN", "uaid": uaid}
 

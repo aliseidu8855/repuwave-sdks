@@ -126,11 +126,23 @@ svc.report(
 )
 ```
 
-**Pass the agent's own signature to both calls.** It is not a formality: it is
-how we know you actually dealt with this agent. A report without it is refused
-outright, which is what stops anyone rating an agent they never met — and it is
-why you should keep the signature between the two steps rather than discarding
-it after the check.
+**Pass the agent's own signature to both calls.** It is not a formality. The
+server checks it against the agent's registered public key, and refuses without
+it — a UAID alone buys nothing, which matters because UAIDs are public, listed
+in the key directory. The same applies to the report: one without a signature is
+refused outright, which is what stops anyone rating an agent they never met. So
+keep the signature between the two steps rather than discarding it after the
+check.
+
+**If the agent's request had a body, forward it.** The agent signed a hash of
+that body and only you saw it, so pass `body=` (or `body_hash=`) to `verify` or
+the signature cannot be reconstructed:
+
+```python
+result = svc.verify(
+    uaid=..., signature=..., timestamp=..., body=request.body,
+)
+```
 
 **`base_url` defaults to production.** Point it elsewhere for a local stack, and
 include the `/v1` prefix:
