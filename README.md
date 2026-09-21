@@ -14,7 +14,7 @@
 1. **Generate Ed25519 keypairs** (32-byte seed) for agent identity
 2. **Automatically sign** every outbound HTTP request with the agent's private key
 3. **Attach Repuwave headers** (`X-Repuwave-UAID`, `X-Repuwave-Signature`, `X-Repuwave-Timestamp`)
-4. **Handle key rotation** seamlessly when rotating to a new keypair
+4. **Handle key rotation** — the outgoing key signs its replacement, so identity and reputation survive the change
 5. **Provide typed responses** for all Repuwave API interactions
 
 ### Header Protocol
