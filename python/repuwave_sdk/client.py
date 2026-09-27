@@ -10,8 +10,7 @@ Usage:
     client = RepuwaveClient(
         private_key="your_hex_private_key",
         uaid="your-agent-uuid",
-        base_url="https://repuwave.fasolink.app/v1",
-    )
+    )  # base_url defaults to REPUWAVE_API_URL
 
     # All requests are automatically signed
     response = client.get("/verify/some-uaid/")
@@ -22,6 +21,8 @@ from __future__ import annotations
 import time
 
 import httpx
+
+from repuwave_sdk._config import default_base_url
 
 from repuwave_sdk.signer import Ed25519Signer
 
@@ -39,13 +40,13 @@ class RepuwaveClient:
         self,
         private_key: str,
         uaid: str,
-        base_url: str = "https://repuwave.fasolink.app/v1",
+        base_url: str | None = None,
         **httpx_kwargs,
     ) -> None:
         self._signer = Ed25519Signer(private_key)
         self._uaid = uaid
         self._client = httpx.Client(
-            base_url=base_url,
+            base_url=base_url or default_base_url(),
             event_hooks={"request": [self._sign_request]},
             **httpx_kwargs,
         )
@@ -101,13 +102,13 @@ class RepuwaveAsyncClient:
         self,
         private_key: str,
         uaid: str,
-        base_url: str = "https://repuwave.fasolink.app/v1",
+        base_url: str | None = None,
         **httpx_kwargs,
     ) -> None:
         self._signer = Ed25519Signer(private_key)
         self._uaid = uaid
         self._client = httpx.AsyncClient(
-            base_url=base_url,
+            base_url=base_url or default_base_url(),
             event_hooks={"request": [self._sign_request]},
             **httpx_kwargs,
         )

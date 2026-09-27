@@ -65,7 +65,9 @@ export class RepuwaveService {
 
   constructor(options: RepuwaveServiceOptions) {
     this.apiKey = options.apiKey;
-    this.baseUrl = (options.baseUrl || "https://repuwave.fasolink.app/v1").replace(/\/$/, "");
+    // REPUWAVE_API_URL first: the planned public host does not answer yet, and
+    // the dashboard's agent .env download already carries this variable.
+    this.baseUrl = (options.baseUrl || process.env.REPUWAVE_API_URL || "https://repuwave.fasolink.app/v1").replace(/\/$/, "");
   }
 
   private headers(extra: Record<string, string> = {}): Record<string, string> {
