@@ -22,9 +22,17 @@ has **no runtime dependencies**.
 
 ## Installation
 
+The package is not on npm yet. Install it from this repository. `npm install` inside
+the package builds it; then add it to your app:
+
 ```bash
-npm install @repuwave/node-sdk
+git clone https://github.com/aliseidu8855/repuwave-sdks.git
+(cd repuwave-sdks/node && npm install)
+npm install ./repuwave-sdks/node
 ```
+
+`RepuwaveService` reads the API host from `baseUrl`, then `REPUWAVE_API_URL`, then the
+planned public host (`https://repuwave.fasolink.app/v1`, not live yet).
 
 ---
 

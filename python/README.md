@@ -39,11 +39,13 @@ need.
 
 ## Installation
 
+The package is not on PyPI yet. Install it from this repository:
+
 ```bash
-pip install repuwave-sdk
+pip install "git+https://github.com/aliseidu8855/repuwave-sdks.git#subdirectory=python"
 ```
 
-Or from source:
+Or from a checkout:
 
 ```bash
 cd repuwave-sdks/python
@@ -144,7 +146,9 @@ result = svc.verify(
 )
 ```
 
-**`base_url` defaults to production.** Point it elsewhere for a local stack, and
+**`base_url` defaults to `REPUWAVE_API_URL`**, then to the planned public host
+(`https://repuwave.fasolink.app/v1`, not live yet). The `.env` the dashboard
+gives you with a new agent sets `REPUWAVE_API_URL`. To pass it explicitly,
 include the `/v1` prefix:
 
 ```python

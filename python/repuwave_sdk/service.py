@@ -11,6 +11,8 @@ import time
 
 import httpx
 
+from repuwave_sdk._config import default_base_url
+
 
 class RepuwaveService:
     """
@@ -20,12 +22,12 @@ class RepuwaveService:
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://repuwave.fasolink.app/v1",
+        base_url: str | None = None,
         **httpx_kwargs,
     ) -> None:
         self._api_key = api_key
         self._client = httpx.Client(
-            base_url=base_url,
+            base_url=base_url or default_base_url(),
             headers={"X-Service-API-Key": api_key},
             **httpx_kwargs,
         )
